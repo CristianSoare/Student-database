@@ -5,29 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../include/student_db.h"
 
 #define DATABASE_FILE "studentdb.txt"
-
-typedef struct student{
-    int student_id;
-    char forename[20];
-    char surname[20];
-    struct enrolled_courses{
-        char module_code[10];
-        char module_name[50];
-        float module_grade;
-    }sub[3];
-    float semester_average;
-    float semester_percentage;
-}student;
-
-void editRecords(int option);
-void displayRecords(int option);
-void totalRecords();
-void updateRecords();
-void checkDB(FILE *file);
-void deleteRecords();
-void sortRecords();
 
 int main(){
     int choice;
@@ -78,7 +58,7 @@ int main(){
                 sortRecords();
                 break;
         }
-    }while(choice!=0);
+    }while(choice!=0); //Run menu until choice is 0 to exit
 
     return 0;
 }
@@ -86,14 +66,14 @@ int main(){
 
 void editRecords(int option){
     FILE *file;
-    char *editOption= option==1?"w":"a";
+    char *editOption= option==1?"w":"a"; //Depending on option, crate new file or append existing
     file=fopen(DATABASE_FILE, editOption);
     student *s;
     int num_records, i, j;
     printf("Enter how many student records you would like to create?\n>>");
     scanf("%d",&num_records);
-    s=(student*)calloc(num_records,sizeof(student));
-    for (i = 0; i < num_records; ++i) {
+    s=(student*)calloc(num_records,sizeof(student)); //Allocate memory for specific number of records and size of each record
+    for (i = 0; i < num_records; ++i) { //Iterate over each record
         float total=0.0;
         printf("Enter student ID: ");
         scanf("%d",&s[i].student_id);
@@ -101,7 +81,7 @@ void editRecords(int option){
         scanf(" %19s",&s[i].forename);
         printf("Enter student surname: ");
         scanf(" %19s",&s[i].surname);
-        for (j = 0; j < 3; ++j) {
+        for (j = 0; j < 3; ++j) { //Iterate over modules in each student
             printf("Enter module code of subject %d: ",j+1);
             scanf(" %9s",&s[i].sub[j].module_code);
             printf("Enter module name of subject %d: ",j+1);
@@ -112,7 +92,7 @@ void editRecords(int option){
         }
         s[i].semester_average=total/3;
         s[i].semester_percentage=s[i].semester_average/20.0*100.0;
-        fwrite(&s[i],sizeof(student),1,file);
+        fwrite(&s[i],sizeof(student),1,file); //Write to db
     }
     fclose(file);
 }
@@ -125,10 +105,10 @@ void displayRecords(int option){
     int id;
     int found=0;
     if(option==2){
-        printf("\nEnter ID to search records: ");
+        printf("\nEnter ID to search records: "); //Search ID of record to display if option 2 is entered
         scanf("%d",&id);
     }
-    while (fread(&s,sizeof(student),1,file)){
+    while (fread(&s,sizeof(student),1,file)){ //Ensures that depending on the option, it reads either one specific record, or all of them
         if(option==1 || (option==2 && s.student_id==id)){
             found = 1;
             printf("\n[+]%d -- %s %s",s.student_id,s.forename,s.surname);
@@ -146,7 +126,7 @@ void displayRecords(int option){
     fclose(file);
 }
 
-void totalRecords(){
+void totalRecords(){ //Function to calculate number of records by dividing file size by record size
     FILE *file;
     file = fopen(DATABASE_FILE,"r");
     fseek(file,0,SEEK_END);
@@ -155,7 +135,7 @@ void totalRecords(){
     fclose(file);
 }
 
-void checkDB(FILE *file) {
+void checkDB(FILE *file) { //Function to check if database file exists and if not create one
     if (file == NULL) {
         char choice;
         printf("ERROR: Database file not found, would you like to create one?(Y/n)\n>>");
@@ -173,7 +153,7 @@ void checkDB(FILE *file) {
     }
 }
 
-void updateRecords() {
+void updateRecords() { //Function to update records
     student s;
     FILE *file, *tempFile;
     file = fopen(DATABASE_FILE, "r");
@@ -183,12 +163,12 @@ void updateRecords() {
     int found = 0;
     printf("\nEnter ID to update records: ");
     scanf("%d", &id);
-    while (fread(&s, sizeof(student), 1, file)) {
+    while (fread(&s, sizeof(student), 1, file)) { //Iterate over each record in the file
         if (s.student_id == id) {
             found = 1;
             float total=0;
             int choice;
-            printf("What data would you like to update?\n");
+            printf("What data would you like to update?\n"); //Menu with switch to update specific part of record or all of the record
             printf("\n1.ID");
             printf("\n2.FORENAME");
             printf("\n3.SURNAME");
@@ -247,15 +227,15 @@ void updateRecords() {
                     fwrite(&s,sizeof(student),1,tempFile);
                     break;
                 default:
-                    printf("Invalid choice");
+                    printf("Invalid choice"); //Default for invalid choice and input sanitisation purposes
                     break;
             }
         } else {fwrite(&s,sizeof(student),1,tempFile);}
     }
     if (!found) {
-        printf("\nRECORD NOT FOUND\n");
+        printf("\nRECORD NOT FOUND\n"); //If the file is still not found
     } else {
-        fclose(file);
+        fclose(file); //If it is found, it adds the updated data onto the actual file by copying it from temp onto student db in r and w mode respectively
         fclose(tempFile);
         tempFile=fopen("temp.txt","r");
         file= fopen(DATABASE_FILE,"w");
@@ -281,7 +261,7 @@ void deleteRecords(){
     while (fread(&s, sizeof(student), 1, file)) {
         if (s.student_id == id) {
             found=1;
-        }else{
+        }else{ //Writes all files apart from deleted one into temp file
             fwrite(&s,sizeof(student),1,tempFile);
         }
     }
@@ -290,7 +270,7 @@ void deleteRecords(){
     } else {
         fclose(file);
         fclose(tempFile);
-        tempFile=fopen("temp.txt","r");
+        tempFile=fopen("temp.txt","r"); //Copies contents of temp into student db
         file= fopen(DATABASE_FILE,"w");
         while (fread(&s, sizeof(student),1,tempFile)){
             fwrite(&s, sizeof(student),1,file);
@@ -300,7 +280,7 @@ void deleteRecords(){
     fclose(file);
 }
 
-void sortRecords() {
+void sortRecords() { //Sort function depending on menu choices TODO: Implement better input sanitisation in this function and try break it down into multiple
     student *s, s1;
     char sortOption1, sortOption2;
     printf("Sort by average grade or surname?(g/s)\n>>");
@@ -326,7 +306,7 @@ void sortRecords() {
                 }
             }
         }
-        if (sortOption2 == 's' || sortOption2 == 'S') {
+        if (sortOption2 == 's' || sortOption2 == 'S') { //If the user wanted to save the sorted data rather than display it, runs fopen in write mode
             file= fopen(DATABASE_FILE,"w");
         }
         for (int i = 0; i < num; ++i) {
@@ -337,7 +317,7 @@ void sortRecords() {
                 printf("\n      GRADE: %.2f", s[i].sub[j].module_grade);
             }
             printf("\nSEMESTER GRADE : %.2f/20 %.2f\n", s[i].semester_average, s[i].semester_percentage);
-            if (sortOption2 == 's' || sortOption2 == 'S') {
+            if (sortOption2 == 's' || sortOption2 == 'S') { //And writes the record
                 fwrite(&s[i], sizeof(student), 1, file);
             }
         }
@@ -345,7 +325,7 @@ void sortRecords() {
             fclose(file);
         }
     }
-    else if(sortOption1=='s' || sortOption1=='S'){
+    else if(sortOption1=='s' || sortOption1=='S'){ //Option for surname sorting with similar algorithm
         printf("Sort on display or save in file?(d/s)\n>>");
         scanf(" %c",&sortOption2);
         FILE *file = fopen(DATABASE_FILE,"r");

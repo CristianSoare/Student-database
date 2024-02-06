@@ -1,3 +1,0 @@
-C:/Users/kitco/Desktop/Portfolio/C Student Record Management System/cmake-build-debug/CMakeFiles/C_Student_Record_Management_System.dir
-C:/Users/kitco/Desktop/Portfolio/C Student Record Management System/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/kitco/Desktop/Portfolio/C Student Record Management System/cmake-build-debug/CMakeFiles/rebuild_cache.dir
